@@ -1,0 +1,42 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Math Puzzle Engine</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: auto; padding: 20px;}
+        .puzzle-section { display: none; margin-top: 20px; padding: 15px; border: 1px solid #ccc; background: #f9f9f9;}
+        .active { display: block; }
+        button { padding: 8px 12px; cursor: pointer; background: #007bff; color: white; border: none;}
+        #output { margin-top: 20px; padding: 10px; background: #e0f7fa; font-family: monospace; white-space: pre-wrap;}
+        canvas { border: 1px solid #333; background: #fff; margin-top: 15px; display: block;}
+    </style>
+</head>
+<body>
+    <h1>Mathematical Puzzle Engine</h1>
+    <select id="puzzle-select" onchange="switchPuzzle()">
+        <option value="none">-- Select a Solver --</option>
+        <option value="lights-out">Lights Out (GF2 Algebra)</option>
+        <option value="triangulation">Polygon Triangulation (Ear Clipping)</option>
+    </select>
+
+    <div id="lights-out" class="puzzle-section">
+        <h3>Lights Out</h3>
+        <input type="text" id="lo-input" value="1,0,1,0,1,0,1,0,1" size="30">
+        <button onclick="runLightsOut()">Solve</button>
+    </div>
+
+    <div id="triangulation" class="puzzle-section">
+        <h3>Triangulation Visualizer</h3>
+        <p>Enter points as x,y pairs. Try a complex star or house shape!</p>
+        <input type="text" id="tri-input" value="50,200, 150,50, 250,200, 150,150" size="50">
+        <button onclick="runTriangulation()">Triangulate & Draw</button>
+        <canvas id="polyCanvas" width="400" height="300"></canvas>
+    </div>
+
+    <div id="output">Output ready...</div>
+
+    <script src="puzzle_engine.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
