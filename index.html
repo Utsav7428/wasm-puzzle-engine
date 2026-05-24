@@ -1,0 +1,105 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>C++ WebAssembly Puzzle Solver</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: auto; }
+        .puzzle-section { display: none; margin-top: 20px; padding: 15px; border: 1px solid #ccc; background: #f9f9f9;}
+        .active { display: block; }
+        button { padding: 10px 15px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 4px;}
+        button:hover { background: #0056b3; }
+        #output { margin-top: 20px; padding: 10px; background: #e0f7fa; border-left: 5px solid #00acc1; font-family: monospace; white-space: pre-wrap;}
+    </style>
+</head>
+<body>
+
+    <h1>C++ Wasm Puzzle Engine</h1>
+    
+    <label for="puzzle-select">Choose a puzzle:</label>
+    <select id="puzzle-select" onchange="switchPuzzle()">
+        <option value="none">-- Select --</option>
+        <option value="lights-out">Lights Out</option>
+        <option value="triangulation">Polygon Triangulation</option>
+    </select>
+
+    <div id="lights-out" class="puzzle-section">
+        <h3>Lights Out Solver</h3>
+        <p>Enter the grid state as a comma-separated list of 0s and 1s (e.g., 1,0,1,0,1,0,1,0,1 for a 3x3 grid):</p>
+        <input type="text" id="lo-input" value="1,0,1,0,1,0,1,0,1" size="30">
+        <button onclick="runLightsOut()">Solve</button>
+    </div>
+
+    <div id="triangulation" class="puzzle-section">
+        <h3>Polygon Triangulation</h3>
+        <p>Enter points as comma-separated x,y pairs (e.g., 0,0, 0,5, 5,5, 5,0):</p>
+        <input type="text" id="tri-input" value="0,0, 0,5, 5,5, 5,0" size="40">
+        <button onclick="runTriangulation()">Triangulate</button>
+    </div>
+
+    <div id="output">Output will appear here...</div>
+
+    <script src="puzzle_engine.js"></script>
+    <script>
+        // Check if Wasm is loaded
+        Module.onRuntimeInitialized = function() {
+            document.getElementById("output").innerText = "Wasm Engine Loaded. Ready.";
+        };
+
+        // --- Extensible UI Logic ---
+        function switchPuzzle() {
+            document.querySelectorAll('.puzzle-section').forEach(el => el.classList.remove('active'));
+            const selected = document.getElementById('puzzle-select').value;
+            if (selected !== 'none') {
+                document.getElementById(selected).classList.add('active');
+                document.getElementById('output').innerText = "Ready to solve.";
+            }
+        }
+
+        // --- Lights Out Wrapper ---
+        function runLightsOut() {
+            let inputStr = document.getElementById("lo-input").value;
+            let arr = inputStr.split(',').map(Number);
+            
+            let stateVec = new Module.VectorInt();
+            arr.forEach(num => stateVec.push_back(num));
+
+            // Assuming 3x3 for this demo
+            let solutionVec = Module.solveLightsOut(3, 3, stateVec);
+
+            if (solutionVec.size() === 0) {
+                document.getElementById("output").innerText = "No solution exists.";
+            } else {
+                let outStr = "Press these buttons:\n";
+                for (let i = 0; i < solutionVec.size(); i++) {
+                    outStr += solutionVec.get(i) + " ";
+                    if ((i + 1) % 3 === 0) outStr += "\n"; // Format as 3x3
+                }
+                document.getElementById("output").innerText = outStr;
+            }
+            stateVec.delete(); solutionVec.delete(); // Free C++ memory
+        }
+
+        // --- Triangulation Wrapper ---
+        function runTriangulation() {
+            let inputStr = document.getElementById("tri-input").value;
+            let arr = inputStr.split(',').map(Number);
+
+            let pointsVec = new Module.VectorDouble();
+            arr.forEach(num => pointsVec.push_back(num));
+
+            let resultVec = Module.triangulatePolygon(pointsVec);
+
+            let outStr = "Triangles found:\n";
+            for (let i = 0; i < resultVec.size(); i += 6) {
+                outStr += `Triangle: (${resultVec.get(i)}, ${resultVec.get(i+1)}), ` +
+                          `(${resultVec.get(i+2)}, ${resultVec.get(i+3)}), ` +
+                          `(${resultVec.get(i+4)}, ${resultVec.get(i+5)})\n`;
+            }
+            document.getElementById("output").innerText = outStr;
+            
+            pointsVec.delete(); resultVec.delete(); // Free C++ memory
+        }
+    </script>
+</body>
+</html>
